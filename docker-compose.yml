@@ -1,0 +1,29 @@
+version: '2.4'
+services:
+  x11-bridge:
+    image: jare/x11-bridge
+    environment:
+      DISPLAY: :14
+      MODE: "tcp"
+      XPRA_HTML: "yes"
+      XPRA_PASSWORD: 111
+    network_mode: "host"
+    healthcheck:
+      test: curl --fail http://localhost:10000 || exit 1
+  emacshome:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /run/current-system/profile/bin/emacs
+    volumes:
+      - ./:/home/emacsuser/workspace
+    environment:
+      DISPLAY: :14
+    depends_on:
+      x11-bridge:
+        condition: service_healthy
+    volumes_from:
+      - x11-bridge
+    privileged: true
+    network_mode: "host"
+# make sure to use ${USER_ID:-0} when referencing id args
