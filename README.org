@@ -1,0 +1,123 @@
+#+TITLE: A Big Containerized Doom/Docker Emacs
+#+SUBTITLE: Featuring Guix
+
+* Introduction
+This is a custom Doom Emacs configuration that I've dockerized using [[https://guix.gnu.org/][Guix]], with Jaremko's [[https://github.com/JAremko/docker-x11-bridge][docker-x11-bridge]] web configuration as a default GUI. I'd consider this in alpha, for people somewhat familiar with (doom) emacs who might be curious about trying someone else's setup.
+* Setup
+** Requirements
++ Docker Compose
++ Access to port 10000
++ 12 GB of disk space: My bundled emacs is not resource intensive. But I've included space behemoths (like texlive, pandoc, and gcc tooling) which enable creating pdfs and accessing web pages as org-mode buffers.
+** Running
+You can execute the following in a shell:
+#+BEGIN_EXAMPLE sh
+git clone https://github.com/branjam4/doom-emacs-docker.git
+cd doom-emacs-docker
+docker-compose up -d --build
+#+END_EXAMPLE
+** Accessing
+Once that's complete, access [[http://localhost:10000/index.html?encoding=rgb32&password=111]] in a browser. You should see the Doom emacs splash screen!
+* Fine-tuning
+There are some quality-of-life settings to adjust; I describe how to change them in the headings below:
+** Find the =config.org= file
++ Execute the function ~doom/find-file-in-private-config~ to find the private config file, named =config.org=. More specifically:
+  + Press ~Alt+x~ (emacs will recognize this as ~M-x~), which brings up a menu where you can look up and execute any function with an =(interactive)= form in its definition body.
+  + Search for the function (=doom/find-file-in-private-config=). Searching here is flexible, so you can try =Doom file priv= and this function should still come up.
+  + Once we have =doom/find-file-in-private-config= highlighted in the menu, press /Return/ (known as ~RET~ to emacs)
+  + Over time, you might feel it's more efficient to access commands via keyboard shortcuts. If the function you're executing has a keyboard shortcut, you'll see it immediately to the right of the function name as you're ~M-x~-ing for it. =doom/find-file-in-private-config= for example has ~C-c f p~ (as in press ~Ctrl+c~, then ~f~, then ~p~).
+** Make the changes
+Navigate to the settings you want to change. I describe two recommended ones:
+
+*** Vim-keybindings
+I built this config assuming full control of the Ctrl or Alt modifier keys. On a web browser this is not the case though. So I recommend using the Emulated Vi Layer, =evil=, if you choose to stick with the web interface. That way there will (hopefully) be less conflict between the browser and emacs.
+Search for =;;(evil +everywhere)=, and remove the semicolons. There are multiple ways to do the search, but I tend to prefer these functions:
++ Execute ~counsel-grep-or-swiper~ to filter through matches interactively as you type
++ Use ~Ctrl+s~ to bring up a quick search, bringing your cursor to the next match. Not as flashy as the first function, but it's available even in a plain emacs.
+*** Dictionary warning
+It slipped my mind to install a dictionary for the =emacs-flyspell= package, so emacs will give a warning. It's harmless, but you can remove it by searching for, then deleting the =spell= module, which should be under the doom =:checkers= category.
+** Save and recompile Doom emacs
++ Execute the function ~org-babel-tangle~ (~M-x~, =org-babel-tangle= / =org bab tan=, /confirm correct function/, /press/ ~RET~). This propagates the changes made to the actual files Doom will read to reconfigure your environment. We call this /tangling/ in the literate programming world. When you tell emacs to tangle your =.org= file, it will save before executing the tangle.
+* Reloads and Restarts
+** ~doom/reload~-ing
+Execute the function ~doom/reload~ whenever you change your configuration file. There are also some custom keybindings I define which only show up after a ~doom/reload~. ~doom/reload~ will hot-reload emacs by:
++ installing/removing packages you've (un)declared in your config
++ running other changes you've chosen to make in the configuration (such as when to load a package or keybinding changes)
++ byte-compiling packages/composing an autoloads file/rerunning other optimization functions that help emacs run smoothly.
+** Exiting
+Normally ~doom/reload~ does not require restarting emacs. But in the emacs -> vim keybinding change, functions which should now follow the ~SPC~ (space) key still follow the ~C-c~ key. So we will need to exit, by evaluating ~save-buffers-kill-terminal~ to quit emacs. Once you leave emacs, the container responsible for emacs will shut down; we will have to use docker from the command line to start it back up.
+** Restarting
+Assuming we're working with a stopped container, use ~docker start guixemacs_emacshome_1~ in the command line. Then you can return to the web-interface.
+* Purpose
+:PROPERTIES:
+:ID:       04e42a28-4582-449a-bf5b-1dc8ff19ec25
+:END:
+I've set up some custom workflows within emacs that I'd like others outside of emacs to interact with, either through self-serving exploration, or interactive demos. But I didn't just want to share specific emacs appliances, I also wanted to empower others to use said appliances, and hopefully build their own. To me, this meant reducing the cognitive load of learning out-of-the-box emacs. It also meant eliminating the overhead of setting up a custom emacs config. More rambling in the [[#On reproducing a containerized emacs][On (re)producing a containerized emacs]] section.
+* TODO Issues
+** Container size
+Full-featured dev environments like Visual Studio recommend having 20-50GB of space available. Were I to attempt replication of their killer features (fine-tuned remote execution, LSP integration, etc.), perhaps my container would fall within that range (bringing with it greater responsibility to demonstrate what distinguishes this from Visual Studio).
+
+While I still have increased my capability to share my work through dockerizing my development environment, 12GB might be a big ask on a local machine. So future work would look like:
++ providing a VPS that both I and someone else can ssh into.
++ creating an emacs cluster, where "child" emacs containers might be:
+  + smaller, but longer running processes which would otherwise halt emacs
+  + dedicated "apps" such as:
+    + ERC
+    + a mail reader
+    + specialized org-mode use cases (issue tracker, website generation, jupyter backend)
+
+The main idea here involves offloading core or peripheral functionality, such that users introduced to the "emacs cluster" don't see a 12+GB hit, to their network or to their storage device (though of course it's easier to remove inside Docker vs. outside of it).
+** Docker as a Virtual Machine
+I tested this setup using the legacy Docker Toolbox (on Windows), in Virtualbox. In that case I had to set up port forwarding. Additionally, local volumes were not shared with the Docker virtual machine.
+** Xpra web vs. ssh
+Setting up the web version of the docker-x11-bridge was more comfortable for me in the short term. But ssh is the way to go in the long run, since browser shortcuts will take priority over emacs shortcuts (Ctrl+D, for example).
+* On (re)producing a containerized emacs
+I've heard it said that a great part of emacs' charm beyond its text editing capabilities is bringing disparate tools together under a unified text-first interface.
+But it's the wild west in terms of what people have created so far which allows others to experience that charm for themselves (i.e. demo appliances).
+So I believe the "killer" emacs packages--magit, transient+hydra, ido/helm/ivy, tools built atop org-mode, even eshell--would greatly benefit from a collaborative infrastructure. It wasn't emacs that got me into using these tools, rather these tools got me into emacs, along with the external tools attached to them (e.g. git, grep). Thus allowing more people to write menus, learn git, take control of organizing their lives, etc.--without having to first learn emacs, might have the side effect of getting more people to learn emacs.
+
+Emacs-as-a-container is not new, but it doesn't have a lot of traction compared to the default /this emacs config is for me, you're probably better off making your own/ culture. I don't imagine that this effort will magically introduce an emacs built for social exploration and collaboration. But perhaps seeing this inspires you to want your own containerized setup to have friends try out, to use at a meeting where you have access to Docker but not your own dev machine, or to share the same environment while pairing.
+
+If so, I have some avenues for you to consider:
+*** Doom ready container
+I saved a docker container with all the dependencies of Doom preinstalled, so you can roll your own doom config (or let the installer give you the stock one). You'll need to take some specific steps to properly start and provision the container, which I document below:
+#+BEGIN_EXAMPLE sh
+docker pull j2a2m2all/docker-doomemacs-preinstall:0.1
+docker create <image_id>
+docker start <container_id>
+docker exec -ti <container_id> /run/current-system/profile/bin/bash --login
+
+#within the container
+#starting as root
+mkdir /usr
+ln -s /sys/run/current-profile/bin /usr/bin
+
+
+#become emacsuser then change to the home directory
+su emacsuser
+cd /home/emacsuser
+
+#clone Doom emacs into .emacs.d
+git clone https://github.com/hlissner/doom-emacs.git .emacs.d
+
+#optional: clone your private config into .doom.d
+#git clone https://github.com/branjam4/doom-config.git .doom.d
+
+#run doom's install script with the auto-confirm switch
+.emacs.d/bin/doom -y install
+#+END_EXAMPLE
+
+It may be trivial to translate this into a Dockerfile, but I haven't gotten around to pushing one yet.
+*** Behind the layers: Guix System
+This repository resembles a Frankenstein's monster of abstractions: I take advantage of Docker for easy accessibility through DockerHub, but a lot of the "need-to-know" behind how it's built comes from repos on GitHub. In one of them ([[https://github.com/branjam4/doom-config.git][my Doom emacs config]]) I skip noting how to install some of the more cumbersome dependencies (libvterm, pandoc, texlive) since I do it through the other repo utilizing Guix (see [[https://github.com/branjam4/guix-bigspec.git][this Guix repo]] for the dependencies I use).
+
+So what if you want to make your own container from scratch, replacing the extraneous dependencies I've put into it with your own?
+#+BEGIN_EXAMPLE sh
+#see the guix manual for follow-up
+guix pack -f docker emacs <your> <dependencies> <here>
+#+END_EXAMPLE
+
+A substantial number of people working on Guix use emacs. That may not be true when looked at in the other direction though. So you may want to take the traditional route of installing your dependencies on top of a better known operating system. Initially that's what I tried to do--install emacs on top of an Ubuntu image. But that quickly became a headache when it came to the sysadmin pieces of the puzzle:
++ where are the package repositories that come with the disk operating system?
++ how do I avoid Docker anti-patterns?
++ what are the steps to create an non-root user with a home directory and access to the environment?
+I could only get so far in each of these avenues before wondering what other options I had. This is where Guix came in. Technically, Guix could take care of installing many, if not all the emacs package declarations I've made. But I wanted to leverage the work I'd already done on the Doom config, only using Guix where it falls short. Emacs does not aim to handle non-emacs dependencies and isn't the greatest with (its own) containerization--but these are two things Guix excels at.
