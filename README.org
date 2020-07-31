@@ -1,7 +1,7 @@
 #+TITLE: A Big Containerized Doom/Docker Emacs (Featuring Guix)
 
 * Introduction
-This is a custom Doom Emacs configuration that I've dockerized using [[https://guix.gnu.org/][Guix]], with Jaremko's [[https://github.com/JAremko/docker-x11-bridge][docker-x11-bridge]] web configuration as a default GUI. I'd consider this in alpha, for people somewhat familiar with (doom) emacs who might be curious about trying someone else's setup.
+This is a custom [[https://github.com/hlissner/doom-emacs][Doom Emacs]] configuration that I've dockerized using [[https://guix.gnu.org/][Guix]], with Jaremko's [[https://github.com/JAremko/docker-x11-bridge][docker-x11-bridge]] web configuration as a default GUI. I'd consider this in alpha, for people somewhat familiar with (doom) emacs who might be curious about trying someone else's setup.
 * Setup
 ** Requirements
 + Docker Compose
@@ -21,7 +21,7 @@ There are some quality-of-life settings to adjust; I describe how to change them
 ** Find the =config.org= file
 + Execute the function ~doom/find-file-in-private-config~ to find the private config file, named =config.org=. More specifically:
   + Press ~Alt+x~ (emacs will recognize this as ~M-x~), which brings up a menu where you can look up and execute any function with an =(interactive)= form in its definition body.
-  + Search for the function (=doom/find-file-in-private-config=). Searching here is flexible, so you can try =Doom file priv= and this function should still come up.
+  + Search for the function (=doom/find-file-in-private-config=). Searching here is flexible (but is case sensitive), so you can try =doom file priv= and this function should still come up.
   + Once we have =doom/find-file-in-private-config= highlighted in the menu, press /Return/ (known as ~RET~ to emacs)
   + Over time, you might feel it's more efficient to access commands via keyboard shortcuts. If the function you're executing has a keyboard shortcut, you'll see it immediately to the right of the function name as you're ~M-x~-ing for it. =doom/find-file-in-private-config= for example has ~C-c f p~ (as in press ~Ctrl+c~, then ~f~, then ~p~).
 ** Make the changes
@@ -78,7 +78,7 @@ Emacs-as-a-container is not new, but it doesn't have a lot of traction compared 
 
 If so, I have some avenues for you to consider:
 *** Doom ready container
-I saved a docker container with all the dependencies of Doom preinstalled, so you can roll your own doom config (or let the installer give you the stock one). You'll need to take some specific steps to properly start and provision the container, which I document below:
+I saved a docker container with all the dependencies of Doom preinstalled, so you can +roll your own doom config*, or+ let the installer give you the stock config /*(still need to figure out some guix container nuances)/. You'll need to take some specific steps to properly start and provision the container, which I document below:
 #+BEGIN_EXAMPLE sh
 docker pull j2a2m2all/docker-doomemacs-preinstall:0.1
 docker create <image_id>
@@ -107,7 +107,7 @@ git clone https://github.com/hlissner/doom-emacs.git .emacs.d
 
 It may be trivial to translate this into a Dockerfile, but I haven't gotten around to pushing one yet.
 *** Behind the layers: Guix System
-This repository resembles a Frankenstein's monster of abstractions: I take advantage of Docker for easy accessibility through DockerHub, but a lot of the "need-to-know" behind how it's built comes from repos on GitHub. In one of them ([[https://github.com/branjam4/doom-config.git][my Doom emacs config]]) I skip noting how to install some of the more cumbersome dependencies (libvterm, pandoc, texlive) since I do it through the other repo utilizing Guix (see [[https://github.com/branjam4/guix-bigspec.git][this Guix repo]] for the dependencies I use).
+This repository resembles a Frankenstein's monster of abstractions: I take advantage of Docker for easy accessibility through DockerHub, but a lot of the "need-to-know" behind how it's built comes from git repositories. In one of them ([[https://github.com/branjam4/doom-config.git][my Doom emacs config]]) I skip noting how to install some of the more cumbersome dependencies (libvterm, pandoc, texlive) since I do it through the other repo utilizing Guix (see [[https://github.com/branjam4/guix-bigspec.git][this repo]] for the dependencies I use).
 
 So what if you want to make your own container from scratch, replacing the extraneous dependencies I've put into it with your own?
 #+BEGIN_EXAMPLE sh
