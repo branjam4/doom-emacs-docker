@@ -23,17 +23,26 @@ There are some quality-of-life settings to adjust; I describe how to change them
   + Press ~Alt+x~ (emacs will recognize this as ~M-x~), which brings up a menu where you can look up and execute any function with an =(interactive)= form in its definition body.
   + Search for the function (=doom/find-file-in-private-config=). Searching here is flexible (but is case sensitive), so you can try =doom file priv= and this function should still come up.
   + Once we have =doom/find-file-in-private-config= highlighted in the menu, press /Return/ (known as ~RET~ to emacs)
-  + Over time, you might feel it's more efficient to access commands via keyboard shortcuts. If the function you're executing has a keyboard shortcut, you'll see it immediately to the right of the function name as you're ~M-x~-ing for it. =doom/find-file-in-private-config= for example has ~C-c f p~ (as in press ~Ctrl+c~, then ~f~, then ~p~).
-** Make the changes
-Navigate to the settings you want to change. I describe two recommended ones:
+** Make configuration adjustments
+Next, navigate around the file, specifically to the settings you want to change. I describe two optional changes:
 
-*** Vim-keybindings
-I built this config assuming full control of the Ctrl or Alt modifier keys. On a web browser this is not the case though. So I recommend using the Emulated Vi Layer, =evil=, if you choose to stick with the web interface. That way there will (hopefully) be less conflict between the browser and emacs.
-Search for =;;(evil +everywhere)=, and remove the semicolons. There are multiple ways to do the search, but I tend to prefer these functions:
-+ Execute ~counsel-grep-or-swiper~ to filter through matches interactively as you type
-+ Use ~Ctrl+s~ to bring up a quick search, bringing your cursor to the next match. Not as flashy as the first function, but it's available even in a plain emacs.
++ Function discovery note :: The most useful key for +a beginner+ anyone looking to discover emacs functionality is ~M-x~. Over time though, you might feel it's more efficient to access commands via keyboard shortcuts, instead of through ~M-x~. If the function you're executing has a keyboard shortcut, you'll see it immediately to the right of the function name as you're ~M-x~-ing for it. =doom/find-file-in-private-config= for example has the /shortcut chord/ ~C-c f p~ (as in press ~Ctrl+c~, then ~f~, then ~p~). There is also a menu that will pop up if you pause before finishing a chord, which can be helpful if you've forgotten the exact combination of the function you want to run.
+*** Movement Keys
+Emacs comes with a tutorial function, called [[elisp:help-with-tutorial][help-with-tutorial]]. You can either click the link inside while reading this in emacs, or ~M-x~ for it. You may not be able to complete it within the web browser though. By default emacs assumes full control of the Ctrl or Alt/Meta modifier keys, but on a web browser this is not the case! You have two options for getting around this:
+1. (basic) Start another emacs instance inside the shell, instead of on the browser:
+    #+BEGIN_SRC sh
+    docker exec -ti guixemacs_emacshome_1 /run/current-system/profile/bin/bash --login
+    #within the container
+    emacs -nw
+    #+END_SRC
+2. (advanced*) Use vi keybindings inside emacs**:
+   - Search for =;;(evil +everywhere)=, and remove the semicolons. There are multiple ways to do the search, but I tend to prefer these functions:
+     - Execute ~counsel-grep-or-swiper~ to filter through matches interactively as you type
+     - Use ~Ctrl+s~ to bring up a quick search, bringing your cursor to the next match. Not as flashy as the first function, but it's available even in a plain emacs.
+/*Advanced considering the steep learning curve of how to move around or make changes if you're unaware of how vi's modal editing works. In particular, going in (~i~) or out (~ESC~) of =insert mode= might confuse the unaware. That said, the creator/maintainer of Doom came from vim and designed Doom first for vimmers, so if you're willing to learn (or already know) the basics, then going this route may provide a better out-of-the-box experience./
+/**this may or may not go without saying, but the emacs tutorial becomes moot once you switch off emacs' default keybindings. You'll have to instead consult a vim tutorial./
 *** Dictionary warning
-It slipped my mind to install a dictionary for the =emacs-flyspell= package, so emacs will give a warning. It's harmless, but you can remove it by searching for, then deleting the =spell= module, which should be under the doom =:checkers= category.
+It slipped my mind to install a dictionary for the =emacs-flyspell= package, so emacs will give a warning in your ~*Messages*~ buffer. It's harmless, but you can remove it by searching for, then deleting the =spell= module. The module should be under the doom =:checkers= category.
 ** Save and recompile Doom emacs
 + Execute the function ~org-babel-tangle~ (~M-x~, =org-babel-tangle= / =org bab tan=, /confirm correct function/, /press/ ~RET~). This propagates the changes made to the actual files Doom will read to reconfigure your environment. We call this /tangling/ in the literate programming world. When you tell emacs to tangle your =.org= file, it will save before executing the tangle.
 * Reloads and Restarts
@@ -51,7 +60,7 @@ Assuming we're working with a stopped container, use ~docker start guixemacs_ema
 :ID:       04e42a28-4582-449a-bf5b-1dc8ff19ec25
 :END:
 I've set up some custom workflows within emacs that I'd like others outside of emacs to interact with, either through self-serving exploration, or interactive demos. But I didn't just want to share specific emacs appliances, I also wanted to empower others to use said appliances, and hopefully build their own. To me, this meant reducing the cognitive load of learning out-of-the-box emacs. It also meant eliminating the overhead of setting up a custom emacs config. More rambling in the [[#on-reproducing-a-containerized-emacs][On (re)producing a containerized emacs]] section.
-* TODO Issues
+* TODO Known Issues
 ** Container size
 Full-featured dev environments like Visual Studio recommend having 20-50GB of space available. Were I to attempt replication of their killer features (fine-tuned remote execution, LSP integration, etc.), perhaps my container would fall within that range (bringing with it greater responsibility to demonstrate what distinguishes this from Visual Studio).
 
@@ -67,8 +76,10 @@ While I still have increased my capability to share my work through dockerizing 
 The main idea here involves offloading core or peripheral functionality, such that users introduced to the "emacs cluster" don't see a 12+GB hit, to their network or to their storage device (though of course it's easier to remove inside Docker vs. outside of it).
 ** Docker as a Virtual Machine
 I tested this setup using the legacy Docker Toolbox (on Windows), in Virtualbox. In that case I had to set up port forwarding. Additionally, local volumes were not shared with the Docker virtual machine.
+** Guix functionality
+Guix supports making per-user profiles. But with emacs in particular, there may be problems accessing emacs packages that live in a separate profile. I recommend beginners stick with the provided image, until they can learn a little more about how emacs knows about guix-installed packages.
 ** Xpra web vs. ssh
-Setting up the web version of the docker-x11-bridge was more comfortable for me in the short term. But ssh is the way to go in the long run, since browser shortcuts will take priority over emacs shortcuts (Ctrl+D, for example).
+If you followed along using the web interface, it's very likely you dealt with a blurry screen whenever a lot of text shifted at once. Hard to say how xpra-through-http balances between performance and proper display as I don't know. But it obviously presents a (second--given the keyboard issues--) potential barrier to the emacs-in-the-browser user experience. Setting up the web version of the docker-x11-bridge was more comfortable for me in the short term. But ssh is the way to go in the long run.
 * On (re)producing a containerized emacs
 I've heard it said that a great part of emacs' charm beyond its text editing capabilities is bringing disparate tools together under a unified text-first interface.
 But it's the wild west in terms of what people have created so far which allows others to experience that charm for themselves (i.e. demo appliances).
@@ -78,19 +89,15 @@ Emacs-as-a-container is not new, but it doesn't have a lot of traction compared 
 
 If so, I have some avenues for you to consider:
 *** Doom ready container
-I saved a docker container with all the dependencies of Doom preinstalled, so you can +roll your own doom config*, or+ let the installer give you the stock config /*(still need to figure out some guix container nuances)/. You'll need to take some specific steps to properly start and provision the container, which I document below:
+I saved a docker container with all the dependencies of Doom preinstalled, so you can roll your own doom config*, or let the installer give you the stock config /*rolling your own config requires using guix within the container/your Dockerfile to install any external dependencies/. You'll need to take some specific steps to properly start and provision the container, which I document below:
 #+BEGIN_EXAMPLE sh
-docker pull j2a2m2all/docker-doomemacs-preinstall:0.1
-docker create <image_id>
+docker pull j2a2m2all/docker-doomemacs-preinstall:latest
+docker create --privileged <image_id> #allows you to use guix to install new packages, if necessary.
 docker start <container_id>
 docker exec -ti <container_id> /run/current-system/profile/bin/bash --login
 
 #within the container
 #starting as root
-mkdir /usr
-ln -s /sys/run/current-profile/bin /usr/bin
-
-
 #become emacsuser then change to the home directory
 su emacsuser
 cd /home/emacsuser
@@ -100,6 +107,9 @@ git clone https://github.com/hlissner/doom-emacs.git .emacs.d
 
 #optional: clone your private config into .doom.d
 #git clone https://github.com/branjam4/doom-config.git .doom.d
+
+#optional: if you need external packages for your own config:
+#guix install <packages>
 
 #run doom's install script with the auto-confirm switch
 .emacs.d/bin/doom -y install
