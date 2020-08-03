@@ -14,6 +14,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    privileged: true
     command: /run/current-system/profile/bin/emacs
     volumes:
       - ./:/home/emacsuser/workspace
