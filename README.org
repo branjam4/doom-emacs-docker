@@ -4,18 +4,29 @@
 This is a custom [[https://github.com/hlissner/doom-emacs][Doom Emacs]] configuration that I've dockerized using [[https://guix.gnu.org/][Guix]], with Jaremko's [[https://github.com/JAremko/docker-x11-bridge][docker-x11-bridge]] web configuration as a default GUI. I'd consider this in alpha, for people somewhat familiar with (doom) emacs who might be curious about trying someone else's setup.
 * Setup
 ** Requirements
-+ Docker Compose
++ Docker
 + Access to port 10000
 + 12 GB of disk space: My bundled emacs is not resource intensive. But I've included space behemoths (like texlive, pandoc, and gcc tooling) which enable creating pdfs and accessing web pages as org-mode buffers.
-** Running
+** Running in a terminal
+
 You can execute the following in a shell:
 #+BEGIN_EXAMPLE sh
 git clone https://github.com/branjam4/doom-emacs-docker.git
 cd doom-emacs-docker
 docker-compose up -d --build
+
+# accessing the emacs container
+docker exec -it guixemacs_emacshome_1 /run/current-system/profile/bin/bash --login
+
+#within the container
+emacs
 #+END_EXAMPLE
-** Accessing
-Once that's complete, access [[http://localhost:10000/index.html?encoding=rgb32&password=111]] in a browser. You should see the Doom emacs splash screen!
+** (Optional) Accessing in a web browser
+Go to [[http://localhost:10000/index.html?encoding=rgb32&password=111]] in a browser. You should see the Doom emacs splash screen!
+
+The web browser works well for viewing images inside emacs buffers or previewing doom themes. But the screen can easily become blurry when we make changes. Additionally, it is not ideal for some keyboard shortcuts (more information on these in [[#xpra-web][Issues: Xpra web]]).
+
+I'm still learning about alternative GUI container options. But for now my quick workaround is switching from then back to the window (with ~Alt+Tab~ for example)
 * Fine-tuning
 There are some quality-of-life settings to adjust; I describe how to change them in the headings below:
 ** Find the =config.org= file
@@ -78,7 +89,7 @@ The main idea here involves offloading core or peripheral functionality, such th
 I tested this setup using the legacy Docker Toolbox (on Windows), in Virtualbox. In that case I had to set up port forwarding. Additionally, local volumes were not shared with the Docker virtual machine.
 ** Guix functionality
 Guix supports making per-user profiles. But with emacs in particular, there may be problems accessing emacs packages that live in a separate profile. I recommend beginners stick with the provided image, until they can learn a little more about how emacs knows about guix-installed packages.
-** Xpra web vs. ssh
+** Xpra web
 If you followed along using the web interface, it's very likely you dealt with a blurry screen whenever a lot of text shifted at once. Hard to say how xpra-through-http balances between performance and proper display as I don't know. But it obviously presents a (second--given the keyboard issues--) potential barrier to the emacs-in-the-browser user experience. Setting up the web version of the docker-x11-bridge was more comfortable for me in the short term. But ssh is the way to go in the long run.
 * On (re)producing a containerized emacs
 I've heard it said that a great part of emacs' charm beyond its text editing capabilities is bringing disparate tools together under a unified text-first interface.
